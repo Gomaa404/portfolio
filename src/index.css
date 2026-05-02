@@ -1,0 +1,475 @@
+/* ============================================================
+   Global CSS — Tailwind + custom theme system
+   NOTE: Google Fonts are loaded in index.html (single request)
+   ============================================================ */
+
+@import "tailwindcss";
+
+/* ══════════════════════════════════════════════════════════════
+   THEME TOKENS — CSS custom properties
+   The anti-FOUC script in index.html writes data-theme="dark|light"
+   on <html> synchronously, so these variables are always correct
+   before the first paint. React then keeps them in sync via
+   ThemeContext.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Dark theme (default) ── */
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --bg-base:        #030712;   /* deepest background */
+  --bg-elevated:    #0a0f1e;   /* cards, panels */
+  --bg-overlay:     #111827;   /* modals, dropdowns */
+  --bg-subtle:      rgba(255,255,255,0.03);
+
+  /* Text */
+  --text-primary:   #f1f5f9;   /* headings, important */
+  --text-secondary: rgba(241,245,249,0.55);
+  --text-tertiary:  rgba(241,245,249,0.30);
+  --text-muted:     rgba(241,245,249,0.20);
+
+  /* Borders */
+  --border:         rgba(255,255,255,0.08);
+  --border-strong:  rgba(255,255,255,0.15);
+
+  /* Accent (shared between themes) */
+  --accent-violet:  #7c3aed;
+  --accent-cyan:    #0891b2;
+  --accent-violet-soft: rgba(124,58,237,0.15);
+  --accent-cyan-soft:   rgba(8,145,178,0.15);
+
+  /* Glass */
+  --glass-bg:       rgba(255,255,255,0.04);
+  --glass-border:   rgba(255,255,255,0.10);
+
+  /* Scrollbar */
+  --scrollbar-track: #030712;
+  --scrollbar-thumb: #7c3aed;
+
+  /* Nav */
+  --nav-bg:          rgba(3,7,18,0.82);
+
+  /* Form fields */
+  --field-bg:        rgba(255,255,255,0.05);
+  --field-border:    rgba(255,255,255,0.10);
+  --field-text:      #f1f5f9;
+  --field-placeholder: rgba(241,245,249,0.25);
+}
+
+/* ── Light theme ── */
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* ─────────────────────────────────────────────────────────
+     SURFACES
+     Warm parchment base → crisp white cards → soft cream overlay
+     Not blinding white, not cold grey — warm and editorial.
+     ───────────────────────────────────────────────────────── */
+  --bg-base:        #ffffff;   /* Pure white base                           */
+  --bg-elevated:    #ffffff;   /* Pure white cards                          */
+  --bg-overlay:     #f8f8fb;   /* Faint lavender-tinted overlay             */
+  --bg-subtle:      rgba(79, 51, 204, 0.04);
+
+  /* ─────────────────────────────────────────────────────────
+     TEXT — 5-level ink hierarchy
+     Deep blue-black → charcoal → medium → muted → ghost
+     Warm, ink-like — not a stark #000 but premium editorial.
+     ───────────────────────────────────────────────────────── */
+  --text-primary:   #14112e;   /* Deep blue-black — rich ink                */
+  --text-secondary: #2e2a50;   /* Dark indigo-charcoal                      */
+  --text-tertiary:  #5c5880;   /* Muted indigo-grey                         */
+  --text-muted:     #9693b0;   /* Ghost — labels & placeholders             */
+
+  /* ─────────────────────────────────────────────────────────
+     BORDERS — warm parchment tint with indigo
+     ───────────────────────────────────────────────────────── */
+  --border:         rgba(79, 51, 204, 0.10);
+  --border-strong:  rgba(79, 51, 204, 0.22);
+
+  /* ─────────────────────────────────────────────────────────
+     ACCENTS
+     Saturated, vivid — reads powerfully on the warm cream base.
+     Violet: rich royal indigo | Cyan: deep cobalt-teal
+     ───────────────────────────────────────────────────────── */
+  --accent-violet:  #5b21b6;   /* Rich royal violet — vibrant on cream      */
+  --accent-cyan:    #0e7490;   /* Deep cobalt-teal — elegant & readable     */
+  --accent-violet-soft: rgba(91, 33, 182, 0.10);
+  --accent-cyan-soft:   rgba(14, 116, 144, 0.10);
+
+  /* ─────────────────────────────────────────────────────────
+     GLASS — frosted cream card
+     Warm white with barely-there indigo border
+     ───────────────────────────────────────────────────────── */
+  --glass-bg:       rgba(255, 255, 255, 0.80);
+  --glass-border:   rgba(79, 51, 204, 0.12);
+
+  /* ─────────────────────────────────────────────────────────
+     SCROLLBAR
+     ───────────────────────────────────────────────────────── */
+  --scrollbar-track: #e8e8f0;
+  --scrollbar-thumb: #7c3aed;
+
+  /* ─────────────────────────────────────────────────────────
+     NAVBAR
+     ───────────────────────────────────────────────────────── */
+  --nav-bg: rgba(255, 255, 255, 0.92);
+
+  /* ─────────────────────────────────────────────────────────
+     FORM FIELDS
+     ───────────────────────────────────────────────────────── */
+  --field-bg:          #ffffff;
+  --field-border:      rgba(79, 51, 204, 0.18);
+  --field-text:        #14112e;
+  --field-placeholder: #9693b0;
+}
+
+/* ── Base ─────────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html {
+    scroll-behavior: smooth;
+    /* Offset anchors so they land below the 64px sticky navbar */
+    scroll-padding-top: 72px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    overflow-x: hidden;
+    /* Smooth colour transition scoped to background & text only.
+       Using will-change:auto keeps it off the GPU compositor layer
+       so we don't break scroll performance. */
+    transition: background-color 0.35s ease, color 0.35s ease;
+  }
+
+  body {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    @apply antialiased overflow-x-hidden;
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    /* Smooth colour transition on body too */
+    transition: background-color 0.35s ease, color 0.35s ease;
+  }
+
+  h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.02em; }
+
+  img, video { max-width: 100%; display: block; }
+
+  /* Custom scrollbar (desktop only) */
+  @media (min-width: 768px) {
+    ::-webkit-scrollbar        { width: 5px; }
+    ::-webkit-scrollbar-track  { background: var(--scrollbar-track); }
+    ::-webkit-scrollbar-thumb  { background: var(--scrollbar-thumb); border-radius: 9999px; }
+  }
+}
+
+/* ── Reusable utilities ───────────────────────────────────── */
+@layer utilities {
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #818cf8 0%, #a78bfa 40%, #22d3ee 100%);
+  }
+
+  /* Neon glow helpers */
+  .glow-violet { filter: drop-shadow(0 0 16px rgba(139,92,246,0.7)); }
+  .glow-cyan   { filter: drop-shadow(0 0 16px rgba(34,211,238,0.7));  }
+  .glow-blue   { filter: drop-shadow(0 0 16px rgba(96,165,250,0.6));  }
+
+  /* Glass card — uses CSS vars so it adapts to both themes */
+  .glass {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* Section label pill */
+  .section-label {
+    @apply inline-flex items-center gap-2 text-xs font-bold tracking-widest uppercase mb-4;
+    color: var(--accent-violet);
+  }
+
+  /* Animated gradient border on cards */
+  .card-border {
+    position: relative;
+    border-radius: inherit;
+  }
+  .card-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(139,92,246,0.5), rgba(34,211,238,0.3));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Neon button */
+  .btn-neon {
+    @apply relative inline-flex items-center justify-center gap-2
+           font-semibold rounded-full transition-all duration-300
+           hover:scale-105 active:scale-95;
+    background: linear-gradient(135deg, #7c3aed, #0891b2);
+    box-shadow: 0 0 24px rgba(124,58,237,0.5), 0 0 48px rgba(8,145,178,0.2);
+  }
+  .btn-neon:hover {
+    box-shadow: 0 0 36px rgba(124,58,237,0.7), 0 0 72px rgba(8,145,178,0.3);
+  }
+
+  /* Ghost button — adapts to both themes */
+  .btn-ghost {
+    @apply relative inline-flex items-center justify-center gap-2
+           font-semibold rounded-full transition-all duration-300
+           hover:scale-105 backdrop-blur-md;
+    border: 1px solid var(--border-strong);
+    color: var(--text-secondary);
+    background: var(--glass-bg);
+  }
+  .btn-ghost:hover {
+    border-color: rgba(124,58,237,0.6);
+    color: var(--text-primary);
+  }
+
+  /* Theme-aware text helpers */
+  .text-base-primary   { color: var(--text-primary); }
+  .text-base-secondary { color: var(--text-secondary); }
+  .text-base-tertiary  { color: var(--text-tertiary); }
+  .text-base-muted     { color: var(--text-muted); }
+
+  /* Theme-aware background helpers */
+  .bg-base         { background-color: var(--bg-base); }
+  .bg-elevated     { background-color: var(--bg-elevated); }
+  .bg-overlay      { background-color: var(--bg-overlay); }
+
+  /* Theme-aware border */
+  .border-theme    { border-color: var(--border); }
+
+  /* Dark mode toggle icon wrapper */
+  .theme-toggle {
+    @apply relative w-9 h-9 rounded-full flex items-center justify-center
+           transition-all duration-300 hover:scale-110;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+  }
+  .theme-toggle:hover { color: var(--text-primary); }
+
+  /* Form field (contact, etc.) */
+  .field-input {
+    width: 100%;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    background: var(--field-bg);
+    border: 1px solid var(--field-border);
+    color: var(--field-text);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  .field-input::placeholder { color: var(--field-placeholder); }
+  .field-input:focus {
+    border-color: rgba(124,58,237,0.5);
+    box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
+  }
+}
+
+/* ── Animations ───────────────────────────────────────────── */
+/* GPU-friendly: only animate transform & opacity (compositor-only) */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-10px); }
+}
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50%       { opacity: 0.75; transform: scale(1.04); }
+}
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Smooth section reveal — used by section-enter class */
+@keyframes sectionReveal {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Gradient shimmer on skeleton/loading states */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+/* Promote animated elements to their own compositor layer */
+.animate-float      { animation: float 4.5s ease-in-out infinite;  will-change: transform; }
+.animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; will-change: transform, opacity; }
+.animate-spin-slow  { animation: spin-slow 20s linear infinite;  will-change: transform; }
+.section-enter      { animation: sectionReveal 0.65s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Loading screen fade */
+@keyframes fadeOut { 0% { opacity: 1; } 100% { opacity: 0; pointer-events: none; } }
+.loading-exit { animation: fadeOut 0.6s ease-out forwards; }
+
+/* Typing cursor blink */
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+.cursor-blink { animation: blink 1s step-end infinite; will-change: opacity; }
+
+/* Scroll progress bar at top of viewport */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  z-index: 9999;
+  background: linear-gradient(90deg, #7c3aed, #0891b2, #22d3ee);
+  transform-origin: left;
+  will-change: transform;
+}
+
+/* ── Range input (editor sliders) ─────────────────────────── */
+input[type="range"] { -webkit-appearance: none; appearance: none; background: transparent; cursor: pointer; }
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7c3aed, #0891b2);
+  border: 2px solid rgba(255,255,255,0.2);
+  box-shadow: 0 0 8px rgba(124,58,237,0.6);
+  cursor: grab;
+  transition: transform 0.15s;
+}
+input[type="range"]::-webkit-slider-thumb:active { cursor: grabbing; transform: scale(1.2); }
+input[type="range"]::-moz-range-thumb {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7c3aed, #0891b2);
+  border: 2px solid rgba(255,255,255,0.2);
+  cursor: grab;
+}
+
+/* ── Lazy image fade-in ────────────────────────────────────── */
+img[loading="lazy"] { opacity: 0; transition: opacity 0.35s ease; }
+img[loading="lazy"].loaded { opacity: 1; }
+
+/* ── Reduce motion: respect user system preference ────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-float, .animate-pulse-glow, .animate-spin-slow { animation: none !important; }
+  /* Keep the theme transition functional even under reduced-motion */
+  html, body { transition-duration: 0s !important; }
+}
+
+/* ── GPU-accelerated utility ───────────────────────────────── */
+.gpu { transform: translateZ(0); will-change: transform; }
+
+/* ── Thin sidebar scrollbar ────────────────────────────────── */
+.sidebar-scroll::-webkit-scrollbar       { width: 3px; }
+.sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+.sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.4); border-radius: 99px; }
+
+/* ── Hero vignette — dark default ──────────────────────────── */
+.hero-vignette {
+  background: radial-gradient(ellipse 70% 70% at 50% 50%, transparent 20%, rgba(3,7,18,0.85) 100%);
+}
+
+/* ── Hero grid — dark default ──────────────────────────────── */
+.hero-grid {
+  opacity: 0.045;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.45) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.45) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* ── Hero vignette — light mode override ───────────────────── */
+[data-theme="light"] .hero-vignette {
+  /* Soft white feather — keeps centre transparent, edges fade to white */
+  background: radial-gradient(
+    ellipse 80% 80% at 50% 50%,
+    transparent 30%,
+    rgba(255,255,255,0.55) 80%,
+    rgba(255,255,255,0.85) 100%
+  );
+}
+
+/* ── Hero grid — light mode override ───────────────────────── */
+[data-theme="light"] .hero-grid {
+  opacity: 0.06;
+  background-image:
+    linear-gradient(rgba(79,51,204,0.35) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79,51,204,0.35) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* ── Light mode specific overrides for hard-coded dark colours ──
+   Sections use hardcoded colours like rgba(255,255,255,0.4).
+   These selectors patch the most visible ones without touching JSX.
+   ──────────────────────────────────────────────────────────── */
+[data-theme="light"] .glass {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+  backdrop-filter: blur(20px);
+}
+
+/* Text patches — map white alphas → ink hierarchy */
+[data-theme="light"] .text-white\/30 { color: var(--text-muted)      !important; }
+[data-theme="light"] .text-white\/40 { color: var(--text-tertiary)   !important; }
+[data-theme="light"] .text-white\/50 { color: var(--text-secondary)  !important; }
+[data-theme="light"] .text-white\/60 { color: var(--text-secondary)  !important; }
+[data-theme="light"] .text-white\/70 { color: var(--text-secondary)  !important; }
+[data-theme="light"] .text-white\/80 { color: var(--text-primary)    !important; }
+[data-theme="light"] .text-white\/90 { color: var(--text-primary)    !important; }
+[data-theme="light"] .text-white     { color: var(--text-primary)    !important; }
+[data-theme="light"] .text-gray-400  { color: var(--text-tertiary)   !important; }
+
+/* Background patches — parchment-aware */
+[data-theme="light"] .bg-black       { background-color: var(--bg-base)          !important; }
+[data-theme="light"] .bg-gray-950    { background-color: var(--bg-elevated)      !important; }
+[data-theme="light"] .bg-white\/5    { background-color: rgba(91,33,182,0.04)   !important; }
+[data-theme="light"] .bg-white\/10   { background-color: rgba(91,33,182,0.07)   !important; }
+
+/* Border patches — warm indigo tint */
+[data-theme="light"] .border-white\/5  { border-color: rgba(79,51,204,0.07)  !important; }
+[data-theme="light"] .border-white\/10 { border-color: rgba(79,51,204,0.12)  !important; }
+[data-theme="light"] .border-white\/20 { border-color: rgba(79,51,204,0.20)  !important; }
+
+/* Gradient patches (Hero and About images) — white base */
+[data-theme="light"] .from-gray-950\/60 { --tw-gradient-from: rgba(255,255,255,0.88) var(--tw-gradient-from-position) !important; }
+[data-theme="light"] .from-black { --tw-gradient-from: #ffffff var(--tw-gradient-from-position) !important; }
+[data-theme="light"] .to-black   { --tw-gradient-to:   #ffffff var(--tw-gradient-to-position)   !important; }
+[data-theme="light"] .via-black  { --tw-gradient-via:  #ffffff var(--tw-gradient-via-position)  !important; }
+
+/* Navbar backdrop */
+[data-theme="light"] .bg-gray-950\/80 { background-color: rgba(255,255,255,0.92) !important; }
+[data-theme="light"] .bg-gray-950\/95 { background-color: rgba(255,255,255,0.97) !important; }
+
+/* Contact form fields */
+[data-theme="light"] input,
+[data-theme="light"] textarea {
+  background: var(--field-bg);
+  border-color: var(--field-border);
+  color: var(--field-text);
+}
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder {
+  color: var(--field-placeholder);
+}
+
+/* About section text inside paragraphs */
+[data-theme="light"] strong { color: var(--text-primary); }
+
+/* Scrollbar in light mode */
+[data-theme="light"]::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+[data-theme="light"] ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); }
